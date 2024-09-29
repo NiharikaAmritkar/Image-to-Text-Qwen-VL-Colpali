@@ -36,6 +36,7 @@ else:
         disabled=not uploaded_file,
     )
     
+    @st.cache
     RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
     # Save the uploaded file to a temporary location
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
