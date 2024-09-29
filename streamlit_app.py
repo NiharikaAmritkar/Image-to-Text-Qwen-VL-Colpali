@@ -9,15 +9,14 @@ from transformers import (
 from qwen_vl_utils import process_vision_info
 import torch
 
- # Load the models and processor once when the app starts
-@st.cache_resource
-def load_models():
-    RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
-    model = Qwen2VLForConditionalGeneration.from_pretrained(
-        "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
+# Load the models and processor once when the app starts
+
+RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
+model = Qwen2VLForConditionalGeneration.from_pretrained(
+    "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
 )
-    processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
-    return RAG, model, processor
+processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
+
     
 # Show title and description.
 st.title("📄 Document question answering")
