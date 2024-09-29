@@ -36,19 +36,15 @@ else:
         disabled=not uploaded_file,
     )
     
-    @st.cache_data
-    def load_models():
-        RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
-        model = Qwen2VLForConditionalGeneration.from_pretrained(
-            "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
-        )
-        processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
-        return RAG, model, processor
+
+        
     # Save the uploaded file to a temporary location
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(uploaded_file.read())  # Write the uploaded file content
         temp_file_path = temp_file.name  # Get the temporary file path
-    
+        
+     RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
+
     RAG.index(
         input_path=temp_file_path,
         index_name="image_index",
@@ -57,10 +53,12 @@ else:
     )
     results = RAG.search(text_query, k=1)
 
-    # model = Qwen2VLForConditionalGeneration.from_pretrained(
-    # "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
-    # )
-    # processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
+
+
+    model = Qwen2VLForConditionalGeneration.from_pretrained(
+         "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
+    )
+    processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
 
      # Step 5: Prepare messages for inference
     if results:
