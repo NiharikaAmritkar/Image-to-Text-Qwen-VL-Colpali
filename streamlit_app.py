@@ -43,7 +43,7 @@ else:
         temp_file.write(uploaded_file.read())  # Write the uploaded file content
         temp_file_path = temp_file.name  # Get the temporary file path
         
-     RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
+    RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
 
     RAG.index(
         input_path=temp_file_path,
