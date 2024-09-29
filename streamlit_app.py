@@ -21,24 +21,24 @@ else:
 
     # Let the user upload a file via `st.file_uploader`.
     uploaded_file = st.file_uploader(
-        "Upload a document (.txt or .md)", type=("txt", "md")
+        "Upload an image (.png or .jpg or .jpeg)", type=("png", "jpg", "jpeg")
     )
 
     # Ask the user for a question via `st.text_area`.
-    question = st.text_area(
+    text_query = st.text_area(
         "Now ask a question about the document!",
-        placeholder="Can you give me a short summary?",
+        placeholder="extract the text?",
         disabled=not uploaded_file,
     )
 
-    if uploaded_file and question:
+    if uploaded_file and text_query:
 
         # Process the uploaded file and question.
         document = uploaded_file.read().decode()
         messages = [
             {
                 "role": "user",
-                "content": f"Here's a document: {document} \n\n---\n\n {question}",
+                "content": f"Here's a document: {document} \n\n---\n\n {text_query}",
             }
         ]
 
