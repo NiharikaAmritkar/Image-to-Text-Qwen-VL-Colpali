@@ -1,2 +1,11 @@
 streamlit
 openai
+transformers
+torch
+byaldi
+pdf2image
+Pillow
+flash-attn
+optimum
+auto-gptq
+qwen-vl-utils
