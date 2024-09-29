@@ -2,7 +2,6 @@ import streamlit as st
 from openai import OpenAI
 from byaldi import RAGMultiModalModel
 from transformers import (
-    RAGMultiModalModel,
     Qwen2VLForConditionalGeneration,
     AutoProcessor,
     AutoTokenizer,
