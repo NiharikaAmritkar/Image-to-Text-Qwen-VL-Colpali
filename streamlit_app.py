@@ -2,11 +2,7 @@ import streamlit as st
 import tempfile
 from openai import OpenAI
 from byaldi import RAGMultiModalModel
-from transformers import (
-    Qwen2VLForConditionalGeneration,
-    AutoProcessor,
-    AutoTokenizer,
-)
+from transformers import Qwen2VLForConditionalGeneration, AutoTokenizer, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import torch
 
