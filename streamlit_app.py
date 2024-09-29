@@ -9,22 +9,13 @@ from transformers import (
 from qwen_vl_utils import process_vision_info
 import torch
 
-# Load the models and processor once when the app starts
-
-RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
-model = Qwen2VLForConditionalGeneration.from_pretrained(
-    "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
-)
-processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
-
-    
 # Show title and description.
 st.title("📄 Document question answering")
 st.write(
     "Upload a document below and ask a question about it – GPT will answer! "
     "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
 )
-
+# Load the models and processor once when the app starts
 # Ask user for their OpenAI API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
 # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
@@ -47,7 +38,9 @@ else:
         placeholder="extract the text?",
         disabled=not uploaded_file,
     )
-
+    
+    RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
+    
     RAG.index(
         input_path=uploaded_file,
         index_name="image_index",
@@ -55,6 +48,11 @@ else:
         overwrite=True
     )
     results = RAG.search(text_query, k=1)
+
+    model = Qwen2VLForConditionalGeneration.from_pretrained(
+    "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
+    )
+    processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
 
      # Step 5: Prepare messages for inference
     if results:
