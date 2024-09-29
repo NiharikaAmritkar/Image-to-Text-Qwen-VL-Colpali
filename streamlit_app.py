@@ -1,4 +1,5 @@
 import streamlit as st
+import tempfile
 from openai import OpenAI
 from byaldi import RAGMultiModalModel
 from transformers import (
