@@ -36,7 +36,7 @@ else:
         disabled=not uploaded_file,
     )
     
-    @st.cache
+    @st.cache_data
     def load_models():
         RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
         model = Qwen2VLForConditionalGeneration.from_pretrained(
