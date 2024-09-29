@@ -7,6 +7,7 @@ from transformers import (
     AutoTokenizer,
 )
 from qwen_vl_utils import process_vision_info
+import torch
 
  # Load the models and processor once when the app starts
 @st.cache_resource
