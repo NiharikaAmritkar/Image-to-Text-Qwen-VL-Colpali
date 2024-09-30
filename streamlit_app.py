@@ -46,7 +46,9 @@ if uploaded_file is not None:
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(uploaded_file.read())  # Write the uploaded file content
         temp_file_path = temp_file.name  # Get the temporary file path
+        st.write(temp_file_path)
     file_path = Path(temp_file_path)
+    st.write(file_path)
     if file_path.suffix not in ['.png', '.jpg', '.jpeg']:
         st.error("Unsupported file type. Please upload an image (.png, .jpg, or .jpeg).")
     else:
