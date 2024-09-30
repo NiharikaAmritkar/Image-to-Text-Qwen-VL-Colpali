@@ -40,80 +40,67 @@ text_query = st.text_area(
     
 
 if uploaded_file is not None:
+    image = Image.open(uploaded_file)
     RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
 
-# Save the uploaded file to a temporary location
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file.write(uploaded_file.read())  # Write the uploaded file content
-        temp_file_path = temp_file.name  # Get the temporary file path
-        st.write(temp_file_path)
-    file_path = Path(temp_file_path)
-    st.write(file_path)
-    if file_path.suffix not in ['.png', '.jpg', '.jpeg']:
-        st.error("Unsupported file type. Please upload an image (.png, .jpg, or .jpeg).")
-    else:
-        try:
-            RAG.index(
-                input_path=temp_file_path,
-                index_name="image_index",
-                store_collection_with_index=False,
-                overwrite=True
-            )
-            results = RAG.search(text_query, k=1)
-        except ValueError as e:
-            st.error(f"Error during indexing: {str(e)}")
-            print(f"Unsupported input type: {type(temp_file_path)}")
 
-
-        try:
-            model = Qwen2VLForConditionalGeneration.from_pretrained(
-                "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
-            )
-            processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
-        except Exception as e:
-            st.error(f"Error loading model or processor: {str(e)}")
-        # Step 5: Prepare messages for inference
-        if results:
-            messages = [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "image": uploaded_file,  # Use the uploaded image
-                        },
-                        {"type": "text", "text": text_query},
-                    ],
-                }
-            ]
-    
-        # Step 6: Prepare input for the model
-        text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        # Assuming process_vision_info is defined
-        image_inputs, video_inputs = process_vision_info(messages)
-
-        # Tokenizing and preparing inputs
-        inputs = processor(
-            text=[text],
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
-            return_tensors="pt",
+        RAG.index(
+            input_path=temp_file_path,
+            index_name="image_index",
+            store_collection_with_index=False,
+            overwrite=True
         )
-        inputs = inputs.to("cuda")
+        results = RAG.search(text_query, k=1)
+   
 
-        # Step 7: Inference and generate output
-        generated_ids = model.generate(**inputs, max_new_tokens=128)
-        generated_ids_trimmed = [
-            out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+   
+        model = Qwen2VLForConditionalGeneration.from_pretrained(
+            "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
+        )
+        processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
+    
+    # Step 5: Prepare messages for inference
+    if results:
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": uploaded_file,  # Use the uploaded image
+                    },
+                    {"type": "text", "text": text_query},
+                ],
+            }
         ]
 
-        # Decode the generated output
-        output_text = processor.batch_decode(
-            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-        )
-        st.write(output_text)
-    os.remove(temp_file_path)
+    # Step 6: Prepare input for the model
+    text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    # Assuming process_vision_info is defined
+    image_inputs, video_inputs = process_vision_info(messages)
+
+    # Tokenizing and preparing inputs
+    inputs = processor(
+        text=[text],
+        images=image_inputs,
+        videos=video_inputs,
+        padding=True,
+        return_tensors="pt",
+    )
+    inputs = inputs.to("cuda")
+
+    # Step 7: Inference and generate output
+    generated_ids = model.generate(**inputs, max_new_tokens=128)
+    generated_ids_trimmed = [
+        out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+    ]
+
+    # Decode the generated output
+    output_text = processor.batch_decode(
+        generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+    )
+    st.write(output_text)
+   
 
 
 # if uploaded_file and text_query:
