@@ -1,8 +1,8 @@
-# 📄 Document question answering template
+# 📄 Document to image extraction
 
-A simple Streamlit app that answers questions about an uploaded document via OpenAI's GPT-3.5.
+A simple Streamlit app that answers questions about an uploaded document.
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)][https://document-app-lrf3cby0y6l.streamlit.app/]
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://document-app-lrf3cby0y6l.streamlit.app/)
 
 ### How to run it on your own machine
 
