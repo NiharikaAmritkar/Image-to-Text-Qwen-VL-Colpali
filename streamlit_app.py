@@ -41,7 +41,7 @@ text_query = st.text_area(
     
 
 if uploaded_file is not None:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
         temp_file.write(uploaded_file.getvalue())  # Write the uploaded file content
         temp_file_path = temp_file.name  # Get the temporary file path
         st.write(temp_file_path)
