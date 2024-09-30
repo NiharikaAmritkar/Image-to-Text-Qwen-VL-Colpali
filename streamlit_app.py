@@ -41,12 +41,15 @@ text_query = st.text_area(
     
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+        temp_file.write(uploaded_file.getvalue())  # Write the uploaded file content
+        temp_file_path = temp_file.name  # Get the temporary file path
+        st.write(temp_file_path)
     RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
 
 
     RAG.index(
-        input_path=image,
+        input_path=temp_file_path,
         index_name="image_index",
         store_collection_with_index=False,
         overwrite=True
