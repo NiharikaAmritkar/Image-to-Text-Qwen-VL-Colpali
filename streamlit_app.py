@@ -44,20 +44,20 @@ if uploaded_file is not None:
     RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
 
 
-        RAG.index(
-            input_path=temp_file_path,
-            index_name="image_index",
-            store_collection_with_index=False,
-            overwrite=True
-        )
-        results = RAG.search(text_query, k=1)
-   
+    RAG.index(
+        input_path=image,
+        index_name="image_index",
+        store_collection_with_index=False,
+        overwrite=True
+    )
+    results = RAG.search(text_query, k=1)
 
-   
-        model = Qwen2VLForConditionalGeneration.from_pretrained(
-            "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
-        )
-        processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
+
+
+    model = Qwen2VLForConditionalGeneration.from_pretrained(
+        "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
+    )
+    processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
     
     # Step 5: Prepare messages for inference
     if results:
