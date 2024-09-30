@@ -1,3 +1,4 @@
+from pathlib import Path
 import streamlit as st
 import tempfile
 from openai import OpenAI
@@ -5,6 +6,7 @@ from byaldi import RAGMultiModalModel
 from transformers import Qwen2VLForConditionalGeneration, AutoTokenizer, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import torch
+import os
 
 # Show title and description.
 st.title("📄 Document question answering")
@@ -16,51 +18,59 @@ st.write(
 # Ask user for their OpenAI API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
 # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
-if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
-else:
+# openai_api_key = st.text_input("OpenAI API Key", type="password")
+# if not openai_api_key:
+#     st.info("Please add your OpenAI API key to continue.", icon="🗝️")
+# else:
 
-    # Create an OpenAI client.
-    client = OpenAI(api_key=openai_api_key)
+#     # Create an OpenAI client.
+#     client = OpenAI(api_key=openai_api_key)
 
     # Let the user upload a file via `st.file_uploader`.
-    uploaded_file = st.file_uploader(
-        "Upload an image (.png or .jpg or .jpeg)", type=("png", "jpg", "jpeg")
-    )
+uploaded_file = st.file_uploader(
+    "Upload an image (.png or .jpg or .jpeg)", type=("png", "jpg", "jpeg")
+)
 
-    # Ask the user for a question via `st.text_area`.
-    text_query = st.text_area(
-        "Now ask a question about the document!",
-        placeholder="extract the text?",
-        disabled=not uploaded_file,
-    )
+# Ask the user for a question via `st.text_area`.
+text_query = st.text_area(
+    "Now ask a question about the document!",
+    placeholder="extract the text?",
+    disabled=not uploaded_file,
+)
     
 
-    if uploaded_file is not None:
-        RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
+if uploaded_file is not None:
+    RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
 
-    # Save the uploaded file to a temporary location
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+# Save the uploaded file to a temporary location
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(uploaded_file.read())  # Write the uploaded file content
         temp_file_path = temp_file.name  # Get the temporary file path
+    file_path = Path(temp_file_path)
+    if file_path.suffix not in ['.png', '.jpg', '.jpeg']:
+        st.error("Unsupported file type. Please upload an image (.png, .jpg, or .jpeg).")
+    else:
+        try:
+            RAG.index(
+                input_path=temp_file_path,
+                index_name="image_index",
+                store_collection_with_index=False,
+                overwrite=True
+            )
+            results = RAG.search(text_query, k=1)
+        except ValueError as e:
+            st.error(f"Error during indexing: {str(e)}")
+            print(f"Unsupported input type: {type(temp_file_path)}")
 
-        RAG.index(
-            input_path=temp_file_path,
-            index_name="image_index",
-            store_collection_with_index=False,
-            overwrite=True
-        )
-        results = RAG.search(text_query, k=1)
 
-
-
-        model = Qwen2VLForConditionalGeneration.from_pretrained(
-             "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
-        )
-        processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
-
-     # Step 5: Prepare messages for inference
+        try:
+            model = Qwen2VLForConditionalGeneration.from_pretrained(
+                "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
+            )
+            processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
+        except Exception as e:
+            st.error(f"Error loading model or processor: {str(e)}")
+        # Step 5: Prepare messages for inference
         if results:
             messages = [
                 {
@@ -96,31 +106,31 @@ else:
             out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
         ]
 
-    # Decode the generated output
-    output_text = processor.batch_decode(
-        generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-    )
-    st.write(output_text)
-os.remove(temp_file_path)
+        # Decode the generated output
+        output_text = processor.batch_decode(
+            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )
+        st.write(output_text)
+    os.remove(temp_file_path)
 
-    
-    # if uploaded_file and text_query:
 
-    #     # Process the uploaded file and question.
-    #     document = uploaded_file.read().decode()
-    #     messages = [
-    #         {
-    #             "role": "user",
-    #             "content": f"Here's a document: {document} \n\n---\n\n {text_query}",
-    #         }
-    #     ]
+# if uploaded_file and text_query:
 
-        # Generate an answer using the OpenAI API.
-        # stream = client.chat.completions.create(
-        #     model="gpt-3.5-turbo",
-        #     messages=messages,
-        #     stream=True,
-        # )
+#     # Process the uploaded file and question.
+#     document = uploaded_file.read().decode()
+#     messages = [
+#         {
+#             "role": "user",
+#             "content": f"Here's a document: {document} \n\n---\n\n {text_query}",
+#         }
+#     ]
 
-        # Stream the response to the app using `st.write_stream`.
-        # st.write_stream(stream)
+    # Generate an answer using the OpenAI API.
+    # stream = client.chat.completions.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=messages,
+    #     stream=True,
+    # )
+
+    # Stream the response to the app using `st.write_stream`.
+    # st.write_stream(stream)
