@@ -17,3 +17,4 @@ A simple Streamlit app that answers questions about an uploaded document.
    ```
    $ streamlit run streamlit_app.py
    ```
+3. Run the Jupyter notebook if the app does not process (run on kaggle GPU P100)
