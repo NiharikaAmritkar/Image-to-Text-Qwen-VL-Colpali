@@ -1,5 +1,6 @@
 from pathlib import Path
 from PIL import Image
+from pdf2image import convert_from_path
 import streamlit as st
 import tempfile
 from openai import OpenAI
@@ -15,8 +16,10 @@ st.write(
     "Upload an image below and ask a question about it! "
 )
 
+
+    # Let the user upload a file via `st.file_uploader`.
 uploaded_file = st.file_uploader(
-    "Upload an image (.png or .jpg or .jpeg)", type=("png", "jpg", "jpeg")
+    "Upload a PDF document", type="pdf"
 )
 
 # Ask the user for a question via `st.text_area`.
@@ -28,12 +31,19 @@ text_query = st.text_area(
     
 
 if uploaded_file is not None:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
+    # Save the uploaded PDF to a temporary location
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
         temp_file.write(uploaded_file.getvalue())  # Write the uploaded file content
         temp_file_path = temp_file.name  # Get the temporary file path
-        st.write(temp_file_path)
-    RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
+        st.write(f"Uploaded file saved to: {temp_file_path}")
 
+    # Convert PDF pages to images
+    images = convert_from_path(temp_file_path)
+
+    # Display the first image as an example
+    st.image(images[0], caption="First page of the PDF", use_column_width=True)
+
+    RAG = RAGMultiModalModel.from_pretrained("vidore/colpali")
 
     RAG.index(
         input_path=temp_file_path,
@@ -41,29 +51,31 @@ if uploaded_file is not None:
         store_collection_with_index=False,
         overwrite=True
     )
+
     results = RAG.search(text_query, k=1)
+    
 
 
-
+    
     model = Qwen2VLForConditionalGeneration.from_pretrained(
         "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8", torch_dtype="auto", device_map="auto"
     )
     processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8")
-    
-    # Step 5: Prepare messages for inference
-    if results:
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "image": uploaded_file,  # Use the uploaded image
-                    },
-                    {"type": "text", "text": text_query},
-                ],
-            }
-        ]
+   
+    #if results:
+    image_index = results[0]["page_num"] - 1
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "image": temp_file_path,  # Use the uploaded image
+                },
+                {"type": "text", "text": text_query},
+            ],
+        }
+    ]
 
     # Step 6: Prepare input for the model
     text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
@@ -91,5 +103,6 @@ if uploaded_file is not None:
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )
     st.write(output_text)
-   
+    
+
 
